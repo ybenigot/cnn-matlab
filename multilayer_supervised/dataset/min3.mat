@@ -1,0 +1,62 @@
+# Created by Octave 4.0.0, Tue Feb 23 20:27:39 2016 CET <yves@Yvess-MacBook-Pro.local>
+# name: ans
+# type: matrix
+# rows: 9
+# columns: 1
+ 1
+ 4
+ 7
+ 2
+ 5
+ 8
+ 3
+ 6
+ 9
+
+
+# name: data_test
+# type: matrix
+# rows: 9
+# columns: 2
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+
+
+# name: data_train
+# type: matrix
+# rows: 9
+# columns: 2
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+ 0.1 0.1
+
+
+# name: labels_test
+# type: matrix
+# rows: 2
+# columns: 1
+ 1
+ 1
+
+
+# name: labels_train
+# type: matrix
+# rows: 2
+# columns: 1
+ 1
+ 1
+
+

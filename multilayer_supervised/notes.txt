@@ -1,0 +1,226 @@
+ufldl2
+
+a) implement cone nn + softmax layer on minets
+b) merge with dnn
+c) test on CIFRAR-10 (32x32) the  STL10 (96x96)
+
+d) then try unsupervised
+
+status : 
+with 2 layers 1 Conv, 1 Connected 1 image 1 filter we still have the problem of gradient check
+
+1. check bias DONE
+2. check gradient on both types of layer independently DONE
+3. check gradient for bias IN PROGRESS
+    1. lambda is accounted for in conv backdrop, choice is L2, try L1 ?
+    2. new conv also seems to alter convergence, check the computation : check OK
+    3. initialize weights scale factor same as other layers
+    4. epsilon value 1e-4
+4. compute training time DONE
+5. store cost and gradient norm/layer over time DONE
+6. look at convolution output on several images at once
+7. use regularization DONE 97% at lambda=0.3
+8. check old layer layout
+9. test with new translated/rotated images
+10. implement stochastic gradient descent
+11. use 60.000 samples instead of 15000
+
+si delta(n)=1 -> delta(n+1) * epsilon = a(n+1 | theta+epsilon)-a(n+1)
+- calculer check gradient sur i=j=1
+
+a. modif init weights
+b. modif check gradient layer 1 only and not bias
+c. print dans prediction
+d. print dans backprop
+e. global dans run_train
+f. hyperparams test min
+g. check gradient not on bias
+h. run_train ratio of dataset=60000
+i. stop script by error()
+  
+STATUS : 
+convolve3(I,delta) != I2-I this is the key : the inverse is not that convolution
+conv2(A,B) flips B
+
+
+unit test on very small images and 1 layer
+FAIT rendre non aléatoire les paramètres theta initiaux
+TODO lister les valeurs pour le premier échantillon de gradient
+
+hypothesis
+h =
+
+   0.54978   0.50000
+   0.54976   0.49998
+
+target output:
+y =
+
+   1
+   0
+
+there is a factor of 4 in test_min_2 but this is a special case. Identify its origin : m or poolDim ? is OK
+ratio of gradient computed to estimated is 4 regardless of pool size, sample size, filter count, filter_size
+there is a significant compute error in gradient of 0.25% even with very little data
+
+factor of 4 holds only for some test data
+a small test test overfits nicely with non stochastic backdrop
+check what happens when labels is random : ratio 4 again
+having a constant filter creates an artefact value of 4 !
+
+-> next
+try learn on 100% of data and sgd/momentum
+try gradient with only one non zero pixel and filter coefficient
+generate translated dataset images for testing
+
+adagrad + momentum 100% jeu de test cnn_sgd_1
+end forward propagation after 20661.7 s
+train accuracy: 0.951900
+...
+end forward propagation after 191.417 s
+test accuracy: 0.954100
+
+accuracy drops dramatically on translated images
+try max pool
+
+— 28 02
+
+max pool fonctionne
+plus consommateur en CPU
+la taille du minibatch semble corrélée avec le momentum optimal
+
+re tester les gradients avec des matrices à zéro sauf 1 élément
+keep the parameters with the best cost
+try RELU
+
+sigmoid+cross entropy cost+sgd+min of sgd 100% of dataset -> 96% but translation lowers to 54% -> this is explained by poolDim=2 ! 
+pool of 4 yields accuracy of 0,60 for translation values of +/- 4 which is logical
+pool àf 4 agains translation of +2/-2 (a breadth of 5 against a pool of 4) yields 0.83, on same data den yields 0.87
+relu+cross entropy cost+sgd+min of sgd 10% of dataset -> 90%
+
+sqare_cost on 10% -> accuracy 11% this is a fail - check gradient
+
+
+
+add a dimension to input X so as to vectorize on all filters : implies convolve4 and new max_pool5, upsample5
+
+STATUS simplify prediction, implement backdrop to several feature maps in backdrop, see if param2stack can be changes
+
+STATUS gradient checking is KO for convnet
+
+
+
+make ‘valid’ convolution ?
+sizing of array is not correct
+use of bias in delta_next is not alright
+
+test_min_1 with squared cost
+on unit layer test exactly one gradient (the last param ?) is out of the estimation
+param 163 is always false
+
+retest cnn_sgd_2 with squared cost and all sigmoids (2 mods)
+
+random select sgd samples
+
+
+04/04/2016 
+==========
+
+-> with relu test_min2 and test_min1 are OK
+-> relu and epsilon = 1e-6 seems to improve gradient checking results , much better than sigmoid
+-> add a max pooling layer behind relu : precision drops to 'unprecise' for most items whereas it was OK for all without that layer
+
+-> creating an architecture with 1 convlayer and 1 connected layer there are already big errors : sign is different, ratio is not constant - without any max pooling
+
+
+-> corrected derivate shall be that of preivous layer
+-> or do we need to derivate softmax (currently not implemented)?
+we see that the derivate of softmax is the same as sigmoid
+-> adagrad on connected layer shall protect againt norm of gradient=0, added an epsilon
+
+zero gradient at layer 1 of 2 becuase relu derivative is false. It cant be expressed as a function of the activation. setting it to 1 gives unprecise results
+with that min2c is unprecise on layer 1, OK on layer 2
+
+DONE : recompute derivative as a function of the net input, not of the activation
+
+after corrections
+TEST_MIN_5 (conn+conn) : gradients OK with sigmoid or relu
+TEST_MIN_4 (conv+conn, no pool) : layer 1 OK layer 2 OK
+TEST_MIN_2C : two layers convnet ok layer 2 relu, 
+      b) gradient for bias is false already at the last layer !
+
+grads of layer 2 are negative because net inut is negative which is incorrect
+rand init for relu shall never be negative, other wise some gradients will be zero forever ?
+rand init + offset 2 yields ok for min2c but ko with softmqx on in_4
+initialization values shall depend on activation function
+
+on the gradient there seems to be a factor 2*m
+setting an initialization of 2+s for relu solves the problem of test_min_4
+bias still to be corrected, test cnn_sgd_3
+status : cost is Nan, find where
+finally is seems that softmax exp(z) overflows, we should use something else, 
+don't forget bias error -> seems to disappear
+trying to place a linear stage with coeff 1e-2, better to have relu with a parametric slope
+results in approximate gradients and poor convergence
+
+the question is why do we need a linear downsize in min sgd 3 ?
+
+layer size negative create an invalid initialisation value
+cur_size and prev_size seem to be computed based on layer_sizer, should they be computed on filter size ? NO
+works at last
+
+now : check for other NN topologies, try on matlab, profile code
+check if imprecision are not caused by pooling max with max equals for several imputs so selection is not relevant
+
+16/04/2016
+==========
+
+min_sgd_3
+...for 60000 samples, train accuracy: 0.967033
+...for 10000 samples, test accuracy: 0.965600
+...trans accuracy: 0.860000 for delta=+-2
+...trans accuracy: 0.500000 for delta=+-4
+matlab : 97%
+retry with lambda=0.3 instead of 1.0 97.3%
+with translated images vector 2  : 79%
+min_sgd_4 
+...for 5000 samples, train accuracy: 0.962600
+...for 5000 samples, test accuracy: 0.937600
+with translated images vector 2  : 0.60
+with same parameters as lenet-5 but not same activation functiond
+97% train 95% test
+
+Lenet5 uses average pooling, plus a linear function of pooling, plus a sigmoid
+
+image 32x32 pixels normalized mean 0 variance 1
+6 FM filter 5x5 pool 2
+16FM 5,5 partially connected, pool 2
+120 connected , sigmoid
+84 connected sigmoid squashing functon tanh(Ax) A=1.79
+then RBF function
+
+--> try drop out one the connected layers, and stochastic pooling on conv layers
+
+--> visualiser les filtres en tant qu'image
+
+sgd 4 2 convnet filter size 5 relu 10 epochs
+for 5000 samples, train accuracy: 0.972000
+for 5000 samples, test accuracy: 0.955200
+
+sgd 3 1 convnet filter size 9 relu 20 epochs
+for 5000 samples, train accuracy: 0.982600
+for 5000 samples, test accuracy: 0.966400
+with tanh the resultis the same :
+for 5000 samples, train accuracy: 0.981800
+for 5000 samples, test accuracy: 0.966200
+
+using native conv2 in conv3full in backprop to see if it is faster
+deactivated backprop after first batch
+
+augment lambda
+decrease alpha for sgd for 200 samples
+
+derivative of softmax is not correct, see
+http://stats.stackexchange.com/questions/79454/softmax-layer-in-a-neural-network
+
+

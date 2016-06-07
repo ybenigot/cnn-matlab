@@ -1,0 +1,5 @@
+function C=test10(IM,F)
+
+	C=conv2(IM,rot90(F,2));
+
+endfunction
