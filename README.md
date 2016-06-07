@@ -1,11 +1,6 @@
-stanford_dl_ex
-==============
+This repository uses code adapted from stanford dl ex exercises, but goes farther, implementing a convnet with hyperparameters.
 
-Programming exercises for the Stanford Unsupervised Feature Learning and Deep Learning Tutorial
+Please note : this is only trial software, not maintained open source, so do not use it for anything more than reading.
 
-This repository contains starter code for the tutorial at http://ufldl.stanford.edu/tutorial
+If you are looking for a good convnet I suggest you try Theano as this matlab implementation is not optimal.
 
-If you have suggestions, questions, or bug reports, please submit contact:
-
-Andrew Maas ( amaas AT cs dot stanford.edu)
-Sameep Tandon (sameep AT stanford dot edu)
